@@ -37,6 +37,7 @@ if nargin == 3
     LOCAL_STEP=0.05;
     MC_LENGTH=fix(50*(length(lb)^0.5));
     EXPECTED_FOBJ=1e-6;
+    VISUAL_OUTPUT=1; %Show convergence curve or text output only
 elseif nargin == 4
     % Use parameters specified in DSA_options
     if isfield(DSA_options,'start_beta')
@@ -68,6 +69,11 @@ elseif nargin == 4
         EXPECTED_FOBJ=DSA_options.expected_fobj;
     else
         EXPECTED_FOBJ=0;
+    end
+    if isfield(DSA_options,'visual_output')
+        VISUAL_OUTPUT=DSA_options.visual_output;
+    else
+        VISUAL_OUTPUT=1;
     end
 else
     fprintf('Incorrect number of input parameters\n');
@@ -101,11 +107,13 @@ local_steps = LOCAL_STEP*ones(np,1);
 beta = START_BETA;
 
 % Visualize output
-h = animatedline;
-axis([START_BETA END_BETA EXPECTED_FOBJ 1.2*fopt_now]);
-title('Convergence of DSA');
-xlabel('Temperature \beta');ylabel('Best objective function value found');
-set(gca,'XScale','log','YScale','log');
+if VISUAL_OUTPUT
+    h = animatedline;
+    axis([START_BETA END_BETA EXPECTED_FOBJ 1.2*fopt_now]);
+    title('Convergence of DSA');
+    xlabel('Temperature \beta');ylabel('Best objective function value found');
+    set(gca,'XScale','log','YScale','log');
+end
 
 % Iterations for the main phase of optimization
 n_func_eval=0;
@@ -130,8 +138,13 @@ while beta < END_BETA && fopt_now > EXPECTED_FOBJ
             f_kept(i_x_kept) = f_now;
         end
     end
+    if VISUAL_OUTPUT
     addpoints(h,beta,fopt_now);
     drawnow;
+    else
+        fprintf('Beta = %.2e\n',beta);
+        fprintf('Optimal objective function value = %.2e\n',fopt_now);
+    end
     beta = beta*COOLING_RATE;
 end
 x_opt = xopt_now;
